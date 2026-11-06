@@ -8,21 +8,11 @@
 - **Missing HTTP validation:** The API client decoded response bodies without checking HTTP status codes, potentially treating server errors as decoding failures or successful results.
 - **Cancellation treated as failure:** Cancelled requests entered the failure state, potentially displaying an error when the view's task was cancelled.
 
-
 Validation approach: 
-reproduce behavioral bugs with focused failing regression tests, apply minimal fixes, then rerun regression tests and the existing suite.
+reproduce behavioral bugs with focused failing tests, apply minimal fixes, then rerun tests.
 
-- Fixed list identity using API-provided user IDs and corrected decoding of the top-level user array.
-- Validate HTTP responses before decoding, while preserving network and decoding errors.
-- Use `@StateObject` to preserve the ViewModel across view reconstruction.
-- Separate initial loading from refresh using a nested `RefreshState`; refreshing and refresh failures preserve the last successfully loaded users.
-- Initial loading shows page-level progress; refreshing replaces the toolbar Refresh button with a progress indicator.
-- Refresh failures show a lightweight message and restore the Refresh button for retry.
-- The ViewModel prevents overlapping requests without debounce; cancellation restores the previous data and exits loading.
-- Inject `UsersService` and `URLSession` for deterministic tests.
-- Construct and inject dependencies at the app entry point, keeping dependency creation out of views.
-
-## TODO
-
-- [ ] Extend unit tests to cover all `UsersState` and `RefreshState` cases and transitions, including success, failure, and cancellation.
-- [ ] Networking Component
+Design decisions & Trade-offs
+- Kept MVVM lightweight by injecting `UsersAPIClient` through a small `UsersService` protocol. A repository would become useful for coordinating data sources or caching policies, while use cases would help isolate complex or shared business workflows.
+- Modelled refresh separately from initial loading so existing users remain visible during refresh and after refresh failure, accepting that the displayed data may be stale.
+- Ignored overlapping loads to prevent request races with minimal complexity. Features such as search would require a different policy, such as cancellation and protection against stale responses.
+- Prioritised tests around identified bugs and core user flows. A controllable service verifies intermediate and final ViewModel states without timing assumptions, while API client tests separately cover decoding and HTTP validation. UI presentation and live API integration remain outside this unit-test scope.
