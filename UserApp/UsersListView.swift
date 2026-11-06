@@ -3,8 +3,12 @@
 import SwiftUI
 
 struct UsersListView: View {
-    @StateObject private var viewModel = UsersViewModel(apiClient: UsersAPIClient())
+    @StateObject private var viewModel: UsersViewModel
 
+    init(viewModel: @autoclosure @escaping () -> UsersViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel())
+    }
+    
     var body: some View {
         NavigationStack {
             content
