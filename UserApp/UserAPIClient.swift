@@ -2,16 +2,30 @@
 
 import Foundation
 
-struct UsersAPIClient {
+enum UsersAPIError: Error, Equatable {
+    case invalidResponse
+    case httpStatus(Int)
+}
+
+struct UsersAPIClient: UsersService {
+    private let session: URLSession
+    
+    init(session: URLSession = .shared) {
+        self.session = session
+    }
+    
     func fetchUsers() async throws -> [User] {
         let url = URL(string: "https://jsonplaceholder.typicode.com/users")!
-        let (data, _) = try await URLSession.shared.data(from: url)
-
-        struct Response: Decodable {
-            let users: [User]
+        let (data, response) = try await session.data(from: url)
+        
+        guard let response = response as? HTTPURLResponse else {
+            throw UsersAPIError.invalidResponse
+        }
+        
+        guard (200..<300).contains(response.statusCode) else {
+            throw UsersAPIError.httpStatus(response.statusCode)
         }
 
-        let response = try JSONDecoder().decode(Response.self, from: data)
-        return response.users
+        return try JSONDecoder().decode([User].self, from: data)
     }
 }

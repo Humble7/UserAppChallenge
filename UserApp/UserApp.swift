@@ -9,7 +9,7 @@ import SwiftUI
 struct UserApp: App {
     var body: some Scene {
         WindowGroup {
-            UsersListView()
+            UsersListView(viewModel: UsersViewModel(apiClient: UsersAPIClient()))
         }
     }
 }
