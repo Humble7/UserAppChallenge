@@ -2,18 +2,19 @@
 
 import Foundation
 
-enum UsersAPIError: Error, Equatable {
+nonisolated enum UsersAPIError: Error, Equatable {
     case invalidResponse
     case httpStatus(Int)
 }
 
-struct UsersAPIClient: UsersService {
+nonisolated struct UsersAPIClient: UsersService {
     private let session: URLSession
     
     init(session: URLSession = .shared) {
         self.session = session
     }
     
+    @concurrent
     func fetchUsers() async throws -> [User] {
         let url = URL(string: "https://jsonplaceholder.typicode.com/users")!
         let (data, response) = try await session.data(from: url)

@@ -1,53 +1,19 @@
 # User List App
 
-## Overview
+Validation approach: 
+reproduce behavioral bugs with focused failing regression tests, apply minimal fixes, then rerun regression tests and the existing suite.
 
-This task is intentionally small and designed to take **60 – 75 minutes**. It will be assessed as a commercial grade application. You will fix and extend a tiny SwiftUI feature that interacts with a real public API.
-
-## UserList App
-
-The user list app is a small app that:
-
-- Renders a list of users
-- Fetches data from the public API:
-    **https://jsonplaceholder.typicode.com/users**
-- Shows loading, success, and error states
-- Contains bugs
-
-## Your Tasks
-
-### 1. Fix the Existing Bugs
-
-- The list should display user data
-- Loading and error states behave properly
-
-### 2. Implement the Refresh feature
-
-The refresh button should:
-
-- Trigger a reload of the data
-- Show a loading state during refresh
-
-### 3. Add Unit Tests
-
-We want to see your approach towards testing this functionality.
-
-### 4. Add a Short README
-
-Please include a short **5 – 10 line** explanation covering:
-
-- The main bugs you identified
-- How you fixed them
-- Any design decisions or trade-offs you made
-
-## Submission
-
-Please submit a link to a repository containing your solution. We will clone the repository and run tests to ensure your solution is correct. In the interview, we discuss your changes.
-
-## Time Expectation
-
-This challenge is intentionally scoped to **60 – 75 minutes**.
-
-**NOTE: Please do not Reference the interviewing company in code.**
+- Fixed list identity using API-provided user IDs and corrected decoding of the top-level user array.
+- Validate HTTP responses before decoding, while preserving network and decoding errors.
+- Use `@StateObject` to preserve the ViewModel across view reconstruction.
+- Separate initial loading from refresh using a nested `RefreshState`; refreshing and refresh failures preserve the last successfully loaded users.
+- Initial loading shows page-level progress; refreshing replaces the toolbar Refresh button with a progress indicator.
+- Refresh failures show a lightweight message and restore the Refresh button for retry.
+- The ViewModel prevents overlapping requests without debounce; cancellation restores the previous data and exits loading.
+- Inject `UsersService` and `URLSession` for deterministic tests.
+- Construct and inject dependencies at the app entry point, keeping dependency creation out of views.
 
 
+## TODO
+
+- [ ] Add HTTP 429 cooldown handling based on `Retry-After`, preserving loaded data and preventing refresh/retry until the deadline.

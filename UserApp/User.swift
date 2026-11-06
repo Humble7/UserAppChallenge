@@ -2,12 +2,12 @@
 
 import Foundation
 
-struct Geo: Decodable {
+nonisolated struct Geo: Decodable {
     let lat: String
     let lng: String
 }
 
-struct Address: Decodable {
+nonisolated struct Address: Decodable {
     let street: String
     let suite: String
     let city: String
@@ -15,13 +15,13 @@ struct Address: Decodable {
     let geo: Geo
 }
 
-struct Company: Decodable {
+nonisolated struct Company: Decodable {
     let name: String
     let catchPhrase: String
     let bs: String
 }
 
-struct User: Decodable, Identifiable {
+nonisolated struct User: Decodable, Identifiable {
     let id: Int
     let name: String
     let username: String
