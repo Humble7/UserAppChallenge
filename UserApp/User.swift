@@ -21,7 +21,7 @@ struct Company: Decodable {
     let bs: String
 }
 
-struct User: Decodable {
+struct User: Decodable, Identifiable {
     let id: Int
     let name: String
     let username: String
