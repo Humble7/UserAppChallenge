@@ -3,6 +3,7 @@
 import SwiftUI
 
 struct UsersListView: View {
+    // Bug fix: Retain the ViewModel across view reconstruction instead of recreating it with @ObservedObject.
     @StateObject private var viewModel: UsersViewModel
 
     init(viewModel: @autoclosure @escaping () -> UsersViewModel) {

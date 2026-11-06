@@ -21,6 +21,7 @@ nonisolated struct Company: Decodable {
     let bs: String
 }
 
+// Bug fix: List(users) requires Identifiable conformance; an id property alone is insufficient.
 nonisolated struct User: Decodable, Identifiable {
     let id: Int
     let name: String
