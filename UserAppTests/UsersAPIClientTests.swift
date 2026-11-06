@@ -11,6 +11,7 @@ import Testing
 
 struct UsersAPIClientTests {
 
+    // Bug fix
     // Covers the incorrect response decoding bug: a valid top-level user array must decode successfully.
     @Test
     @MainActor
@@ -29,6 +30,7 @@ struct UsersAPIClientTests {
         #expect(users.map(\.id) == [42])
     }
     
+    // Bug fix
     // Covers missing HTTP validation: an HTTP 500 must produce a status error, not a decoding error.
     @Test
     @MainActor
