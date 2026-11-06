@@ -2,6 +2,11 @@
 
 import Foundation
 
+enum UsersAPIError: Error, Equatable {
+    case invalidResponse
+    case httpStatus(Int)
+}
+
 struct UsersAPIClient: UsersService {
     private let session: URLSession
     
@@ -11,7 +16,15 @@ struct UsersAPIClient: UsersService {
     
     func fetchUsers() async throws -> [User] {
         let url = URL(string: "https://jsonplaceholder.typicode.com/users")!
-        let (data, _) = try await session.data(from: url)
+        let (data, response) = try await session.data(from: url)
+        
+        guard let response = response as? HTTPURLResponse else {
+            throw UsersAPIError.invalidResponse
+        }
+        
+        guard (200..<300).contains(response.statusCode) else {
+            throw UsersAPIError.httpStatus(response.statusCode)
+        }
 
         return try JSONDecoder().decode([User].self, from: data)
     }
