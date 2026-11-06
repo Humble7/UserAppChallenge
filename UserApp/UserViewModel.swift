@@ -35,6 +35,7 @@ final class UsersViewModel: ObservableObject {
     }
 
     func load() async {
+        // Bug fix: Reject cancelled tasks and overlapping loads so requests cannot race to update state.
         guard !Task.isCancelled, !isLoading else { return }
 
         let previousState = state
@@ -46,9 +47,12 @@ final class UsersViewModel: ObservableObject {
 
         do {
             let users = try await apiClient.fetchUsers()
+            // Bug fix: A service may return after cancellation; do not publish its result.
             try Task.checkCancellation()
             state = .loaded(users: users, refresh: .idle)
         } catch {
+            // Bug fix: Cancellation should exit loading without displaying a new failure.
+            // Keep loaded users and reset refresh, or restore the state before the initial load.
             let wasCancelled = Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled
             if case .loaded(let users, _) = previousState {
                 state = .loaded(users: users, refresh: wasCancelled ? .idle : .failed(error))

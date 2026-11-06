@@ -9,6 +9,7 @@ import XCTest
 @testable import UserApp
 
 final class UsersViewModelTests: XCTestCase {
+    // Covers overlapping requests: a second load must not start another request or end the active loading state.
     @MainActor
     func testIgnoresDuplicateLoad() async {
         // Arrange
@@ -38,6 +39,7 @@ final class UsersViewModelTests: XCTestCase {
         await firstLoad.value
     }
     
+    // Covers cancellation treated as failure: cancelling an initial load must restore idle instead of showing an error.
     @MainActor
     func testCancelledLoadReturnsToIdle() async {
         // Arrange
@@ -62,6 +64,7 @@ final class UsersViewModelTests: XCTestCase {
         }
     }
     
+    // Covers refresh data preservation: keep loaded users during refresh and after failure, exposing the error in RefreshState.
     @MainActor
     func testRefreshFailureKeepsLoadedUsers() async {
         // Arrange

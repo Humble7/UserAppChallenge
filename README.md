@@ -1,5 +1,14 @@
 # User List App
 
+## Bugs Fixed
+- **Missing list identity:** `User` did not conform to `Identifiable`, causing `List(users)` to fail to compile.
+- **Incorrect response decoding:** The API client expected a JSON object containing a `users` array, but the endpoint returns a top-level array, causing valid responses to fail decoding.
+- **Overlapping requests:** Repeated refreshes could start concurrent requests, allowing older responses to overwrite newer results or end the loading state prematurely.
+- **Incorrect ViewModel ownership:** The view created its own ViewModel using `@ObservedObject`, allowing view reconstruction to recreate the ViewModel and lose loaded data and state.
+- **Missing HTTP validation:** The API client decoded response bodies without checking HTTP status codes, potentially treating server errors as decoding failures or successful results.
+- **Cancellation treated as failure:** Cancelled requests entered the failure state, potentially displaying an error when the view's task was cancelled.
+
+
 Validation approach: 
 reproduce behavioral bugs with focused failing regression tests, apply minimal fixes, then rerun regression tests and the existing suite.
 
@@ -13,7 +22,7 @@ reproduce behavioral bugs with focused failing regression tests, apply minimal f
 - Inject `UsersService` and `URLSession` for deterministic tests.
 - Construct and inject dependencies at the app entry point, keeping dependency creation out of views.
 
-
 ## TODO
 
-- [ ] Add HTTP 429 cooldown handling based on `Retry-After`, preserving loaded data and preventing refresh/retry until the deadline.
+- [ ] Extend unit tests to cover all `UsersState` and `RefreshState` cases and transitions, including success, failure, and cancellation.
+- [ ] Networking Component

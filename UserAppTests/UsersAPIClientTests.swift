@@ -11,6 +11,7 @@ import Testing
 
 struct UsersAPIClientTests {
 
+    // Covers the incorrect response decoding bug: a valid top-level user array must decode successfully.
     @Test
     @MainActor
     func fetchUsersDecodesTopLevelArray() async throws {
@@ -28,6 +29,7 @@ struct UsersAPIClientTests {
         #expect(users.map(\.id) == [42])
     }
     
+    // Covers missing HTTP validation: an HTTP 500 must produce a status error, not a decoding error.
     @Test
     @MainActor
     func fetchUsersRejectsHTTP500() async {
