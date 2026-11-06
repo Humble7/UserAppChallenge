@@ -27,15 +27,21 @@ final class UsersViewModel: ObservableObject {
     }
 
     func load() async {
-        guard !isLoading else { return }
-        
+        guard !Task.isCancelled, !isLoading else { return }
+
+        let previousState = state
         state = .loading
 
         do {
             let users = try await apiClient.fetchUsers()
+            try Task.checkCancellation()
             state = .loaded(users)
         } catch {
-            state = .failed(error)
+            if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled {
+                state = previousState
+            } else {
+                state = .failed(error)
+            }
         }
     }
 }
