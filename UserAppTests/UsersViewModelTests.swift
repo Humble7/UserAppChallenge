@@ -61,6 +61,55 @@ final class UsersViewModelTests: XCTestCase {
             XCTFail("Expected idle after cancellation")
         }
     }
+    
+    @MainActor
+    func testRefreshFailureKeepsLoadedUsers() async {
+        // Arrange
+        let service = ControlledUsersService()
+        let viewModel = UsersViewModel(apiClient: service)
+        let user = User(
+            id: 1,
+            name: "Existing User",
+            username: "user",
+            email: "user@example.com",
+            phone: "123",
+            website: "example.com",
+            address: Address(
+                street: "Main Street",
+                suite: "1",
+                city: "Sydney",
+                zipcode: "2000",
+                geo: Geo(lat: "-33", lng: "151")
+            ),
+            company: Company(name: "Example", catchPhrase: "", bs: "")
+        )
+        let initialLoad = Task { await viewModel.load() }
+        await service.waitUntilRequestStarted()
+        service.complete(with: [user])
+        await initialLoad.value
+
+        // Act
+        let refresh = Task { await viewModel.load() }
+        await service.waitUntilRequestStarted()
+
+        // Assert: keep existing users while refreshing.
+        if case .loaded(let users, .loading) = viewModel.state {
+            XCTAssertEqual(users.map(\.id), [user.id])
+        } else {
+            XCTFail("Expected existing users while refreshing")
+        }
+
+        service.fail(with: URLError(.notConnectedToInternet))
+        await refresh.value
+
+        // Assert: keep existing users and expose the refresh error.
+        if case .loaded(let users, .failed(let error)) = viewModel.state {
+            XCTAssertEqual(users.map(\.id), [user.id])
+            XCTAssertEqual((error as? URLError)?.code, .notConnectedToInternet)
+        } else {
+            XCTFail("Expected existing users after refresh failure")
+        }
+    }
 }
 
 @MainActor

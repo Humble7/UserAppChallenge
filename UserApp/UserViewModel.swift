@@ -6,7 +6,13 @@ import Combine
 enum UsersState {
     case idle
     case loading
-    case loaded([User])
+    case loaded(users: [User], refresh: RefreshState)
+    case failed(Error)
+}
+
+enum RefreshState {
+    case idle
+    case loading
     case failed(Error)
 }
 
@@ -20,27 +26,34 @@ final class UsersViewModel: ObservableObject {
     }
     
     var isLoading: Bool {
-        if case .loading = state {
+        switch state {
+        case .loading, .loaded(_, .loading):
             return true
+        default:
+            return false
         }
-        return false
     }
 
     func load() async {
         guard !Task.isCancelled, !isLoading else { return }
 
         let previousState = state
-        state = .loading
+        if case .loaded(let users, _) = previousState {
+            state = .loaded(users: users, refresh: .loading)
+        } else {
+            state = .loading
+        }
 
         do {
             let users = try await apiClient.fetchUsers()
             try Task.checkCancellation()
-            state = .loaded(users)
+            state = .loaded(users: users, refresh: .idle)
         } catch {
-            if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled {
-                state = previousState
+            let wasCancelled = Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled
+            if case .loaded(let users, _) = previousState {
+                state = .loaded(users: users, refresh: wasCancelled ? .idle : .failed(error))
             } else {
-                state = .failed(error)
+                state = wasCancelled ? previousState : .failed(error)
             }
         }
     }
