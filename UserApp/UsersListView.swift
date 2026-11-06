@@ -14,11 +14,7 @@ struct UsersListView: View {
             content
                 .navigationTitle("Users")
                 .toolbar {
-                    Button("Refresh") {
-                        Task {
-                            await viewModel.load()
-                        }
-                    }
+                    refreshToolbar
                 }
                 .task {
                     await viewModel.load()
@@ -42,7 +38,7 @@ struct UsersListView: View {
                 }
             }
 
-        case .loaded(let users):
+        case .loaded(let users, let refresh):
             List(users) { user in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(user.name)
@@ -52,6 +48,30 @@ struct UsersListView: View {
                     Text(user.company.name)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+            }
+            .safeAreaInset(edge: .top) {
+                if case .failed = refresh {
+                    Text("Couldn't refresh. Showing the last loaded data.")
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(.regularMaterial)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var refreshToolbar: some View {
+        if case .loaded(_, let refresh) = viewModel.state {
+            if case .loading = refresh {
+                ProgressView()
+            } else {
+                Button("Refresh") {
+                    Task {
+                        await viewModel.load()
+                    }
                 }
             }
         }
