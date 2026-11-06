@@ -14,17 +14,7 @@ struct UsersListView: View {
             content
                 .navigationTitle("Users")
                 .toolbar {
-                    if case .loaded(_, let refresh) = viewModel.state {
-                        if case .loading = refresh {
-                            ProgressView()
-                        } else {
-                            Button("Refresh") {
-                                Task {
-                                    await viewModel.load()
-                                }
-                            }
-                        }
-                    }
+                    refreshToolbar
                 }
                 .task {
                     await viewModel.load()
@@ -67,6 +57,21 @@ struct UsersListView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
                         .background(.regularMaterial)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var refreshToolbar: some View {
+        if case .loaded(_, let refresh) = viewModel.state {
+            if case .loading = refresh {
+                ProgressView()
+            } else {
+                Button("Refresh") {
+                    Task {
+                        await viewModel.load()
+                    }
                 }
             }
         }
