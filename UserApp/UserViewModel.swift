@@ -13,13 +13,22 @@ enum UsersState {
 final class UsersViewModel: ObservableObject {
     @Published private(set) var state: UsersState = .idle
 
-    private let apiClient: UsersAPIClient
+    private let apiClient: any UsersService
 
-    init(apiClient: UsersAPIClient) {
+    init(apiClient: any UsersService) {
         self.apiClient = apiClient
+    }
+    
+    var isLoading: Bool {
+        if case .loading = state {
+            return true
+        }
+        return false
     }
 
     func load() async {
+        guard !isLoading else { return }
+        
         state = .loading
 
         do {

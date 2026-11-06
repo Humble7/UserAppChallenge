@@ -2,7 +2,7 @@
 
 import Foundation
 
-struct UsersAPIClient {
+struct UsersAPIClient: UsersService {
     private let session: URLSession
     
     init(session: URLSession = .shared) {
