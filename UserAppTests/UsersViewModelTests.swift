@@ -118,6 +118,7 @@ private final class ControlledUsersService: UsersService {
     private var pendingResponse: CheckedContinuation<[User], Error>?
     private var requestStarted: CheckedContinuation<Void, Never>?
     
+    @MainActor
     func fetchUsers() async throws -> [User] {
         requestCount += 1
         

@@ -7,7 +7,6 @@
 
 import Foundation
 
-@MainActor
-protocol UsersService {
+nonisolated protocol UsersService {
     func fetchUsers() async throws -> [User]
 }
