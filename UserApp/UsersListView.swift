@@ -25,27 +25,16 @@ struct UsersListView: View {
         .task(id: loadRequestID) {
             await viewModel.load()
         }
-        .overlay(alignment: .bottom) {
-            refreshErrorOverlay
-        }
+        .toast(
+            message: "Couldn't refresh. Try again.",
+            presentationID: $refreshErrorToastID
+        )
         .onReceive(viewModel.$state) { state in
             if case .loaded(_, .failed) = state {
                 refreshErrorToastID = UUID()
             } else {
                 refreshErrorToastID = nil
             }
-        }
-        .task(id: refreshErrorToastID) {
-            guard let toastID = refreshErrorToastID else { return }
-
-            do {
-                try await Task.sleep(for: .seconds(2))
-            } catch {
-                return
-            }
-
-            guard refreshErrorToastID == toastID else { return }
-            refreshErrorToastID = nil
         }
     }
 
@@ -108,22 +97,6 @@ struct UsersListView: View {
         }
     }
 
-    private var refreshErrorOverlay: some View {
-        ZStack {
-            if refreshErrorToastID != nil {
-                Text("Couldn't refresh. Try again.")
-                    .font(.subheadline)
-                    .padding()
-                    .background(.ultraThickMaterial, in: .rect(cornerRadius: 12))
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.15), value: refreshErrorToastID)
-        .allowsHitTesting(false)
-    }
-    
     private var emptyView: some View {
         ContentUnavailableView(
             "No Users",
