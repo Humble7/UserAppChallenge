@@ -26,19 +26,7 @@ struct UsersListView: View {
             await viewModel.load()
         }
         .overlay(alignment: .bottom) {
-            ZStack {
-                if refreshErrorID != nil {
-                    Text("Couldn't refresh. Try again.")
-                        .font(.subheadline)
-                        .padding()
-                        .background(.ultraThickMaterial, in: .rect(cornerRadius: 12))
-                        .padding(.horizontal)
-                        .padding(.bottom)
-                        .transition(.opacity)
-                }
-            }
-            .animation(.easeInOut(duration: 0.15), value: refreshErrorID)
-            .allowsHitTesting(false)
+            refreshErrorOverlay
         }
         .onReceive(viewModel.$state) { state in
             if case .loaded(_, .failed) = state {
@@ -70,30 +58,38 @@ struct UsersListView: View {
             ProgressView("Loading…")
 
         case .failed:
-            VStack(spacing: 8) {
-                Text("Something went wrong")
-                Button("Try Again") {
-                    loadRequestID = UUID()
-                }
-                .disabled(viewModel.isLoading)
-            }
+            failureView
 
         case .loaded(let users, _):
-            List(users) { user in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(user.name)
-                        .font(.headline)
-                    Text(user.email)
-                        .font(.subheadline)
-                    Text(user.company.name)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+            usersList(users)
+        }
+    }
+
+    private var failureView: some View {
+        VStack(spacing: 8) {
+            Text("Something went wrong")
+            Button("Try Again") {
+                loadRequestID = UUID()
             }
-            .overlay {
-                if users.isEmpty {
-                    emptyView
-                }
+            .disabled(viewModel.isLoading)
+        }
+    }
+
+    private func usersList(_ users: [User]) -> some View {
+        List(users) { user in
+            VStack(alignment: .leading, spacing: 4) {
+                Text(user.name)
+                    .font(.headline)
+                Text(user.email)
+                    .font(.subheadline)
+                Text(user.company.name)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .overlay {
+            if users.isEmpty {
+                emptyView
             }
         }
     }
@@ -110,6 +106,22 @@ struct UsersListView: View {
                 .disabled(viewModel.isLoading)
             }
         }
+    }
+
+    private var refreshErrorOverlay: some View {
+        ZStack {
+            if refreshErrorID != nil {
+                Text("Couldn't refresh. Try again.")
+                    .font(.subheadline)
+                    .padding()
+                    .background(.ultraThickMaterial, in: .rect(cornerRadius: 12))
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.15), value: refreshErrorID)
+        .allowsHitTesting(false)
     }
     
     private var emptyView: some View {
