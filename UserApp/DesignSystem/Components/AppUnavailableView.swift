@@ -32,7 +32,9 @@ struct AppUnavailableView: View {
                     .foregroundStyle(AppColors.textPrimary)
             } icon: {
                 Image(systemName: systemImage)
+                    .accessibilityHidden(true)
             }
+            .accessibilityAddTraits(.isHeader)
         } description: {
             Text(message)
                 .font(AppTypography.stateMessage)
@@ -43,6 +45,7 @@ struct AppUnavailableView: View {
                     .disabled(!action.isEnabled)
             }
         }
+        .accessibilityElement(children: .contain)
     }
 }
 
