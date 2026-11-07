@@ -5,6 +5,7 @@ import SwiftUI
 struct UsersListView: View {
     // Bug fix: Retain the ViewModel across view reconstruction instead of recreating it with @ObservedObject.
     @StateObject private var viewModel: UsersViewModel
+    @State private var refreshErrorID: UUID?
 
     init(viewModel: @autoclosure @escaping () -> UsersViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel())
@@ -20,6 +21,40 @@ struct UsersListView: View {
                 .task {
                     await viewModel.load()
                 }
+        }
+        .overlay(alignment: .bottom) {
+            ZStack {
+                if refreshErrorID != nil {
+                    Text("Couldn't refresh. Try again.")
+                        .font(.subheadline)
+                        .padding()
+                        .background(.ultraThickMaterial, in: .rect(cornerRadius: 12))
+                        .padding(.horizontal)
+                        .padding(.bottom)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.15), value: refreshErrorID)
+            .allowsHitTesting(false)
+        }
+        .onReceive(viewModel.$state) { state in
+            if case .loaded(_, .failed) = state {
+                refreshErrorID = UUID()
+            } else {
+                refreshErrorID = nil
+            }
+        }
+        .task(id: refreshErrorID) {
+            guard let errorID = refreshErrorID else { return }
+
+            do {
+                try await Task.sleep(for: .seconds(2))
+            } catch {
+                return
+            }
+
+            guard refreshErrorID == errorID else { return }
+            refreshErrorID = nil
         }
     }
 
@@ -39,7 +74,7 @@ struct UsersListView: View {
                 }
             }
 
-        case .loaded(let users, let refresh):
+        case .loaded(let users, _):
             List(users) { user in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(user.name)
@@ -49,15 +84,6 @@ struct UsersListView: View {
                     Text(user.company.name)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                }
-            }
-            .safeAreaInset(edge: .top) {
-                if case .failed = refresh {
-                    Text("Couldn't refresh. Showing the last loaded data.")
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(.regularMaterial)
                 }
             }
         }
@@ -78,3 +104,38 @@ struct UsersListView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Users loaded") {
+    UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success)))
+}
+
+#Preview("Slow loading (3s)") {
+    UsersListView(
+        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success, delay: .seconds(3)))
+    )
+}
+
+#Preview("Initial load failure") {
+    UsersListView(
+        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialFailure))
+    )
+}
+
+#Preview("Initial loading") {
+    UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialLoading)))
+}
+
+#Preview("Refresh failure") {
+    UsersListView(
+        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshFailure))
+    )
+}
+
+#Preview("Refresh loading") {
+    UsersListView(
+        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshLoading))
+    )
+}
+
+#endif
