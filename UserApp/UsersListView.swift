@@ -8,7 +8,7 @@ struct UsersListView: View {
     
     // Trade-off: Keep this task trigger in the view to encapsulate lifecycle coordination, while the ViewModel owns loading logic and state.
     @State private var loadRequestID = UUID()
-    @State private var refreshErrorID: UUID?
+    @State private var refreshErrorToastID: UUID?
 
     init(viewModel: @autoclosure @escaping () -> UsersViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel())
@@ -30,13 +30,13 @@ struct UsersListView: View {
         }
         .onReceive(viewModel.$state) { state in
             if case .loaded(_, .failed) = state {
-                refreshErrorID = UUID()
+                refreshErrorToastID = UUID()
             } else {
-                refreshErrorID = nil
+                refreshErrorToastID = nil
             }
         }
-        .task(id: refreshErrorID) {
-            guard let errorID = refreshErrorID else { return }
+        .task(id: refreshErrorToastID) {
+            guard let toastID = refreshErrorToastID else { return }
 
             do {
                 try await Task.sleep(for: .seconds(2))
@@ -44,8 +44,8 @@ struct UsersListView: View {
                 return
             }
 
-            guard refreshErrorID == errorID else { return }
-            refreshErrorID = nil
+            guard refreshErrorToastID == toastID else { return }
+            refreshErrorToastID = nil
         }
     }
 
@@ -110,7 +110,7 @@ struct UsersListView: View {
 
     private var refreshErrorOverlay: some View {
         ZStack {
-            if refreshErrorID != nil {
+            if refreshErrorToastID != nil {
                 Text("Couldn't refresh. Try again.")
                     .font(.subheadline)
                     .padding()
@@ -120,7 +120,7 @@ struct UsersListView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.15), value: refreshErrorID)
+        .animation(.easeInOut(duration: 0.15), value: refreshErrorToastID)
         .allowsHitTesting(false)
     }
     
