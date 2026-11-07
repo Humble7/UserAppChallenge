@@ -55,16 +55,16 @@ struct UsersListView: View {
     }
 
     private var failureView: some View {
-        ContentUnavailableView {
-            Label("Couldn't load users", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text("Try again in a moment.")
-        } actions: {
-            Button("Try again") {
-                loadRequestID = UUID()
-            }
-            .disabled(viewModel.isLoading)
-        }
+        AppUnavailableView(
+            title: "Couldn't load users",
+            message: "Try again in a moment.",
+            systemImage: "exclamationmark.triangle",
+            action: .init(
+                title: "Try again",
+                isEnabled: !viewModel.isLoading,
+                perform: { loadRequestID = UUID() }
+            )
+        )
     }
 
     private func usersList(_ users: [User]) -> some View {
@@ -101,16 +101,16 @@ struct UsersListView: View {
     }
 
     private var emptyView: some View {
-        ContentUnavailableView {
-            Label("No users", systemImage: "person.2")
-        } description: {
-            Text("Refresh to check for users.")
-        } actions: {
-            Button("Refresh") {
-                loadRequestID = UUID()
-            }
-            .disabled(viewModel.isLoading)
-        }
+        AppUnavailableView(
+            title: "No users",
+            message: "Refresh to check for users.",
+            systemImage: "person.2",
+            action: .init(
+                title: "Refresh",
+                isEnabled: !viewModel.isLoading,
+                perform: { loadRequestID = UUID() }
+            )
+        )
     }
 }
 
