@@ -5,6 +5,9 @@ import SwiftUI
 struct UsersListView: View {
     // Bug fix: Retain the ViewModel across view reconstruction instead of recreating it with @ObservedObject.
     @StateObject private var viewModel: UsersViewModel
+    
+    // Trade-off: Keep this task trigger in the view to encapsulate lifecycle coordination, while the ViewModel owns loading logic and state.
+    @State private var loadRequestID = UUID()
     @State private var refreshErrorID: UUID?
 
     init(viewModel: @autoclosure @escaping () -> UsersViewModel) {
@@ -18,9 +21,9 @@ struct UsersListView: View {
                 .toolbar {
                     refreshToolbar
                 }
-                .task {
-                    await viewModel.load()
-                }
+        }
+        .task(id: loadRequestID) {
+            await viewModel.load()
         }
         .overlay(alignment: .bottom) {
             ZStack {
@@ -68,10 +71,9 @@ struct UsersListView: View {
             VStack(spacing: 8) {
                 Text("Something went wrong")
                 Button("Try Again") {
-                    Task {
-                        await viewModel.load()
-                    }
+                    loadRequestID = UUID()
                 }
+                .disabled(viewModel.isLoading)
             }
 
         case .loaded(let users, _):
@@ -96,10 +98,9 @@ struct UsersListView: View {
                 ProgressView()
             } else {
                 Button("Refresh") {
-                    Task {
-                        await viewModel.load()
-                    }
+                    loadRequestID = UUID()
                 }
+                .disabled(viewModel.isLoading)
             }
         }
     }
