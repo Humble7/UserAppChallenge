@@ -61,6 +61,8 @@ struct UsersListView: View {
         }
     }
 
+    // MARK: - View Content
+
     @ViewBuilder
     private var content: some View {
         switch viewModel.state {
@@ -88,6 +90,11 @@ struct UsersListView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .overlay {
+                if users.isEmpty {
+                    emptyView
+                }
+            }
         }
     }
     
@@ -104,11 +111,25 @@ struct UsersListView: View {
             }
         }
     }
+    
+    private var emptyView: some View {
+        ContentUnavailableView(
+            "No Users",
+            systemImage: "person.2",
+            description: Text(
+                "There are no users to display. Try refreshing to check again."
+            )
+        )
+    }
 }
 
 #if DEBUG
 #Preview("Users loaded") {
     UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success)))
+}
+
+#Preview("Empty users") {
+    UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(result: [])))
 }
 
 #Preview("Slow loading (3s)") {
