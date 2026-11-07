@@ -36,9 +36,13 @@ final class UsersViewModel: ObservableObject {
 
     func load() async {
         // Bug fix: Reject cancelled tasks and overlapping loads so requests cannot race to update state.
+        // Trade-off: Ignoring overlapping loads avoids request races with minimal coordination,
+        // but drops new requests; search or filtering may need a latest-request policy instead.
         guard !Task.isCancelled, !isLoading else { return }
 
         let previousState = state
+        // Trade-off: Keeping users visible during refresh and after refresh failure preserves
+        // access to the list, but the displayed data may be stale until a refresh succeeds.
         if case .loaded(let users, _) = previousState {
             state = .loaded(users: users, refresh: .loading)
         } else {

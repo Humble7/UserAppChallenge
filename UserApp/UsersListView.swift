@@ -15,27 +15,25 @@ struct UsersListView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Users")
-                .toolbar {
-                    refreshToolbar
-                }
-        }
-        .task(id: loadRequestID) {
-            await viewModel.load()
-        }
-        .toast(
-            message: "Couldn't refresh users. Tap Refresh to try again.",
-            presentationID: $refreshErrorToastID
-        )
-        .onReceive(viewModel.$state) { state in
-            if case .loaded(_, .failed) = state {
-                refreshErrorToastID = UUID()
-            } else {
-                refreshErrorToastID = nil
+        content
+            .navigationTitle("Users")
+            .toolbar {
+                refreshToolbar
             }
-        }
+            .task(id: loadRequestID) {
+                await viewModel.load()
+            }
+            .toast(
+                message: "Couldn't refresh users. Tap Refresh to try again.",
+                presentationID: $refreshErrorToastID
+            )
+            .onReceive(viewModel.$state) { state in
+                if case .loaded(_, .failed) = state {
+                    refreshErrorToastID = UUID()
+                } else {
+                    refreshErrorToastID = nil
+                }
+            }
     }
 
     // MARK: - View Content
@@ -108,39 +106,53 @@ struct UsersListView: View {
 
 #if DEBUG
 #Preview("Users loaded") {
-    UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success)))
+    NavigationStack {
+        UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success)))
+    }
 }
 
 #Preview("Empty users") {
-    UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(result: [])))
+    NavigationStack {
+        UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(result: [])))
+    }
 }
 
 #Preview("Slow loading (3s)") {
-    UsersListView(
-        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success, delay: .seconds(3)))
-    )
+    NavigationStack {
+        UsersListView(
+            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success, delay: .seconds(3)))
+        )
+    }
 }
 
 #Preview("Initial load failure") {
-    UsersListView(
-        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialFailure))
-    )
+    NavigationStack {
+        UsersListView(
+            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialFailure))
+        )
+    }
 }
 
 #Preview("Initial loading") {
-    UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialLoading)))
+    NavigationStack {
+        UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialLoading)))
+    }
 }
 
 #Preview("Refresh failure") {
-    UsersListView(
-        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshFailure))
-    )
+    NavigationStack {
+        UsersListView(
+            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshFailure))
+        )
+    }
 }
 
 #Preview("Refresh loading") {
-    UsersListView(
-        viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshLoading))
-    )
+    NavigationStack {
+        UsersListView(
+            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshLoading))
+        )
+    }
 }
 
 #endif
