@@ -69,15 +69,7 @@ struct UsersListView: View {
 
     private func usersList(_ users: [User]) -> some View {
         List(users) { user in
-            VStack(alignment: .leading, spacing: 4) {
-                Text(user.name)
-                    .font(.headline)
-                Text(user.email)
-                    .font(.subheadline)
-                Text(user.company.name)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+            UserRow(user: user)
         }
         .overlay {
             if users.isEmpty {

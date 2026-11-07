@@ -45,8 +45,9 @@ struct AppToastView: View {
     .padding()
 }
 
-#Preview("Chinese message") {
-    AppToastView(message: "无法刷新用户列表。请点击刷新按钮重试。")
+#Preview("Narrow layout") {
+    AppToastView(message: "Couldn't refresh users. Tap Refresh to try again.")
+        .frame(width: 280)
         .padding()
 }
 
