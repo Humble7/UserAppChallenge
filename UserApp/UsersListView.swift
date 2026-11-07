@@ -55,9 +55,12 @@ struct UsersListView: View {
     }
 
     private var failureView: some View {
-        VStack(spacing: 8) {
-            Text("Something went wrong")
-            Button("Try Again") {
+        ContentUnavailableView {
+            Label("Couldn't load users", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text("Try again in a moment.")
+        } actions: {
+            Button("Try again") {
                 loadRequestID = UUID()
             }
             .disabled(viewModel.isLoading)
@@ -98,13 +101,16 @@ struct UsersListView: View {
     }
 
     private var emptyView: some View {
-        ContentUnavailableView(
-            "No Users",
-            systemImage: "person.2",
-            description: Text(
-                "There are no users to display. Try refreshing to check again."
-            )
-        )
+        ContentUnavailableView {
+            Label("No users", systemImage: "person.2")
+        } description: {
+            Text("Refresh to check for users.")
+        } actions: {
+            Button("Refresh") {
+                loadRequestID = UUID()
+            }
+            .disabled(viewModel.isLoading)
+        }
     }
 }
 
