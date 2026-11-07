@@ -1,86 +1,5 @@
 import Foundation
 
-final class HTTP200UsersURLProtocol: URLProtocol {
-    override class func canInit(with request: URLRequest) -> Bool {
-        true
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        guard let url = request.url,
-              let response = HTTPURLResponse(
-                url: url,
-                statusCode: 200,
-                httpVersion: nil,
-                headerFields: ["Content-Type": "application/json"]
-              ) else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
-            return
-        }
-
-        let data = Data(#"""
-        [
-            {
-                "id": 42,
-                "name": "Test User",
-                "username": "tester",
-                "email": "test@example.com",
-                "phone": "123",
-                "website": "example.com",
-                "address": {
-                    "street": "Main Street",
-                    "suite": "1",
-                    "city": "Sydney",
-                    "zipcode": "2000",
-                    "geo": { "lat": "-33", "lng": "151" }
-                },
-                "company": { "name": "Example", "catchPhrase": "", "bs": "" }
-            }
-        ]
-        """#.utf8)
-
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: data)
-        client?.urlProtocolDidFinishLoading(self)
-    }
-
-    override func stopLoading() {}
-
-}
-
-final class HTTP500URLProtocol: URLProtocol {
-    override class func canInit(with request: URLRequest) -> Bool {
-        true
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        guard let url = request.url,
-              let response = HTTPURLResponse(
-                url: url,
-                statusCode: 500,
-                httpVersion: nil,
-                headerFields: ["Content-Type": "application/json"]
-              ) else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
-            return
-        }
-
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        let data = Data(#"{"message": "Internal Server Error"}"#.utf8)
-        client?.urlProtocol(self, didLoad: data)
-        client?.urlProtocolDidFinishLoading(self)
-    }
-
-    override func stopLoading() {}
-}
-
 // Each fixture subclass provides immutable responses, so parallel tests do not share a handler.
 class StubbedUsersURLProtocol: URLProtocol {
     class var statusCode: Int { 200 }
@@ -130,6 +49,39 @@ class StubbedUsersURLProtocol: URLProtocol {
     }
 
     override func stopLoading() {}
+}
+
+final class HTTP200UsersURLProtocol: StubbedUsersURLProtocol {
+    override class var responseData: Data {
+        Data(#"""
+        [
+            {
+                "id": 42,
+                "name": "Test User",
+                "username": "tester",
+                "email": "test@example.com",
+                "phone": "123",
+                "website": "example.com",
+                "address": {
+                    "street": "Main Street",
+                    "suite": "1",
+                    "city": "Sydney",
+                    "zipcode": "2000",
+                    "geo": { "lat": "-33", "lng": "151" }
+                },
+                "company": { "name": "Example", "catchPhrase": "", "bs": "" }
+            }
+        ]
+        """#.utf8)
+    }
+}
+
+final class HTTP500URLProtocol: StubbedUsersURLProtocol {
+    override class var statusCode: Int { 500 }
+
+    override class var responseData: Data {
+        Data(#"{"message": "Internal Server Error"}"#.utf8)
+    }
 }
 
 final class HTTP299URLProtocol: StubbedUsersURLProtocol {
