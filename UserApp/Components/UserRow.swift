@@ -11,10 +11,15 @@ struct UserRow: View {
             Text(user.email)
                 .font(AppTypography.rowSubtitle)
                 .foregroundStyle(AppColors.textPrimary)
+                .accessibilityLabel("Email: \(user.email)")
             Text(user.company.name)
                 .font(AppTypography.rowMetadata)
                 .foregroundStyle(AppColors.textSecondary)
+                .accessibilityLabel("Company: \(user.company.name)")
         }
+        .lineLimit(nil)
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityElement(children: .combine)
     }
 }
 
