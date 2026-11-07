@@ -26,7 +26,7 @@ struct UsersListView: View {
             await viewModel.load()
         }
         .toast(
-            message: "Couldn't refresh. Try again.",
+            message: "Couldn't refresh users. Tap Refresh to try again.",
             presentationID: $refreshErrorToastID
         )
         .onReceive(viewModel.$state) { state in

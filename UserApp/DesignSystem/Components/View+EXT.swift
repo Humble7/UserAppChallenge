@@ -12,15 +12,12 @@ extension View {
     func toast<ID: Equatable>(
         message: LocalizedStringKey,
         presentationID: Binding<ID?>,
-        duration: Duration = .seconds(2)
+        duration: Duration = .seconds(5)
     ) -> some View {
         self.overlay(alignment: .bottom) {
             ZStack {
                 if presentationID.wrappedValue != nil {
-                    Text(message)
-                        .font(.subheadline)
-                        .padding()
-                        .background(.ultraThickMaterial, in: .rect(cornerRadius: 12))
+                    AppToastView(message: message)
                         .padding(.horizontal)
                         .padding(.bottom)
                         .transition(.opacity)
@@ -43,3 +40,20 @@ extension View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Toast presentation and timer reset") {
+    @Previewable @State var presentationID: UUID? = nil
+
+    NavigationStack {
+        Button("Show toast") {
+            presentationID = UUID()
+        }
+        .navigationTitle("Toast preview")
+    }
+    .toast(
+        message: "Couldn't refresh users. Tap Refresh to try again.",
+        presentationID: $presentationID
+    )
+}
+#endif
