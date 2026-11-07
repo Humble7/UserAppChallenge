@@ -9,8 +9,15 @@ func loadUsers(
     using service: ControlledUsersService
 ) async throws {
     let task = Task { await viewModel.load() }
-    try await service.waitUntilRequestStarted()
-    service.complete(with: users)
+    do {
+        try await service.waitUntilRequestStarted()
+        service.complete(with: users)
+    } catch {
+        task.cancel()
+        service.cancelPendingRequest()
+        await task.value
+        throw error
+    }
     await task.value
 }
 
@@ -39,6 +46,8 @@ final class ControlledUsersService: UsersService {
 
     @MainActor
     func fetchUsers() async throws -> [User] {
+        // Cleanup may cancel the task before it reaches the service.
+        try Task.checkCancellation()
         requestCount += 1
 
         // Unexpected overlapping requests finish immediately so a regression fails instead of hanging.
@@ -79,6 +88,13 @@ final class ControlledUsersService: UsersService {
         }
         pendingResponse = nil
         continuation.resume(throwing: error)
+    }
+
+    // Cancelling a task alone does not resume its checked continuation.
+    func cancelPendingRequest() {
+        guard let continuation = pendingResponse else { return }
+        pendingResponse = nil
+        continuation.resume(throwing: CancellationError())
     }
 
     private enum RequestStartError: Error {
