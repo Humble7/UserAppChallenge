@@ -15,7 +15,7 @@ struct UsersAPIClientTests {
     // Covers the incorrect response decoding bug: a valid top-level user array must decode successfully.
     @Test
     @MainActor
-    func fetchUsersDecodesTopLevelArray() async throws {
+    func `Fetch users decodes a top-level array`() async throws {
         // Arrange
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [HTTP200UsersURLProtocol.self]
@@ -34,28 +34,23 @@ struct UsersAPIClientTests {
     }
 
     // Bug fix
-    // Covers missing HTTP validation: an HTTP 500 must produce a status error, not a decoding error.
-    @Test
+    // Reject unsuccessful HTTP statuses before decoding, including the HTTP 500 error body.
+    @Test(arguments: [HTTPResponse.redirect, .notFound, .serverError])
     @MainActor
-    func fetchUsersRejectsHTTP500() async {
-        // Arrange
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [HTTP500URLProtocol.self]
-        let session = URLSession(configuration: configuration)
+    func `Fetch users rejects unsuccessful HTTP statuses`(_ response: HTTPResponse) async {
+        let (client, session) = makeClient(protocolClass: response.protocolClass)
         defer { session.invalidateAndCancel() }
-        let client = UsersAPIClient(session: session)
 
-        // Act / Assert
-        await #expect(throws: UsersAPIError.httpStatus(500)) {
+        await #expect(throws: UsersAPIError.httpStatus(response.rawValue)) {
             _ = try await client.fetchUsers()
         }
     }
 
-    // HTTP 299 is the upper successful boundary; an empty array is still valid data.
-    @Test
+    // Empty arrays are valid at both boundaries of the successful HTTP status range.
+    @Test(arguments: [HTTPResponse.ok, .upperSuccessBoundary])
     @MainActor
-    func fetchUsersAcceptsHTTP299() async throws {
-        let (client, session) = makeClient(protocolClass: HTTP299URLProtocol.self)
+    func `Fetch users returns an empty array for successful HTTP statuses`(_ response: HTTPResponse) async throws {
+        let (client, session) = makeClient(protocolClass: response.protocolClass)
         defer { session.invalidateAndCancel() }
 
         let users = try await client.fetchUsers()
@@ -65,40 +60,7 @@ struct UsersAPIClientTests {
 
     @Test
     @MainActor
-    func fetchUsersRejectsHTTP300() async {
-        let (client, session) = makeClient(protocolClass: HTTP300URLProtocol.self)
-        defer { session.invalidateAndCancel() }
-
-        await #expect(throws: UsersAPIError.httpStatus(300)) {
-            _ = try await client.fetchUsers()
-        }
-    }
-
-    @Test
-    @MainActor
-    func fetchUsersRejectsHTTP404() async {
-        let (client, session) = makeClient(protocolClass: HTTP404URLProtocol.self)
-        defer { session.invalidateAndCancel() }
-
-        await #expect(throws: UsersAPIError.httpStatus(404)) {
-            _ = try await client.fetchUsers()
-        }
-    }
-
-    @Test
-    @MainActor
-    func fetchUsersReturnsEmptyArray() async throws {
-        let (client, session) = makeClient(protocolClass: StubbedUsersURLProtocol.self)
-        defer { session.invalidateAndCancel() }
-
-        let users = try await client.fetchUsers()
-
-        #expect(users.isEmpty)
-    }
-
-    @Test
-    @MainActor
-    func fetchUsersRejectsMalformedJSON() async {
+    func `Fetch users rejects malformed JSON`() async {
         let (client, session) = makeClient(protocolClass: MalformedJSONURLProtocol.self)
         defer { session.invalidateAndCancel() }
 
@@ -114,7 +76,7 @@ struct UsersAPIClientTests {
 
     @Test
     @MainActor
-    func fetchUsersRejectsMissingRequiredField() async {
+    func `Fetch users rejects missing required fields`() async {
         let (client, session) = makeClient(protocolClass: MissingFieldURLProtocol.self)
         defer { session.invalidateAndCancel() }
 
@@ -130,7 +92,7 @@ struct UsersAPIClientTests {
 
     @Test
     @MainActor
-    func fetchUsersRejectsNonHTTPResponse() async {
+    func `Fetch users rejects non-HTTP responses`() async {
         let (client, session) = makeClient(protocolClass: NonHTTPURLProtocol.self)
         defer { session.invalidateAndCancel() }
 
@@ -139,22 +101,21 @@ struct UsersAPIClientTests {
         }
     }
 
-    @Test
+    // Verify propagation of URLSession errors, including a simulated cancellation error.
+    @Test(arguments: TransportFailure.allCases)
     @MainActor
-    func fetchUsersPropagatesOfflineError() async {
-        await expectTransportError(.notConnectedToInternet, protocolClass: OfflineURLProtocol.self)
-    }
+    func `Fetch users propagates transport errors`(_ failure: TransportFailure) async {
+        let (client, session) = makeClient(protocolClass: failure.protocolClass)
+        defer { session.invalidateAndCancel() }
 
-    @Test
-    @MainActor
-    func fetchUsersPropagatesTimeout() async {
-        await expectTransportError(.timedOut, protocolClass: TimeoutURLProtocol.self)
-    }
-
-    @Test
-    @MainActor
-    func fetchUsersPropagatesCancellation() async {
-        await expectTransportError(.cancelled, protocolClass: CancelledURLProtocol.self)
+        do {
+            _ = try await client.fetchUsers()
+            Issue.record("Expected URLError with code \(failure.code)")
+        } catch let error as URLError {
+            #expect(error.code == failure.code)
+        } catch {
+            Issue.record("Expected URLError with code \(failure.code), received \(error)")
+        }
     }
 
     private func makeClient(protocolClass: URLProtocol.Type) -> (UsersAPIClient, URLSession) {
@@ -164,17 +125,43 @@ struct UsersAPIClientTests {
         return (UsersAPIClient(session: session), session)
     }
 
-    private func expectTransportError(_ code: URLError.Code, protocolClass: URLProtocol.Type) async {
-        let (client, session) = makeClient(protocolClass: protocolClass)
-        defer { session.invalidateAndCancel() }
+    enum HTTPResponse: Int {
+        case ok = 200
+        case upperSuccessBoundary = 299
+        case redirect = 300
+        case notFound = 404
+        case serverError = 500
 
-        do {
-            _ = try await client.fetchUsers()
-            Issue.record("Expected URLError with code \(code)")
-        } catch let error as URLError {
-            #expect(error.code == code)
-        } catch {
-            Issue.record("Expected URLError with code \(code), received \(error)")
+        var protocolClass: URLProtocol.Type {
+            switch self {
+            case .ok: StubbedUsersURLProtocol.self
+            case .upperSuccessBoundary: HTTP299URLProtocol.self
+            case .redirect: HTTP300URLProtocol.self
+            case .notFound: HTTP404URLProtocol.self
+            case .serverError: HTTP500URLProtocol.self
+            }
+        }
+    }
+
+    enum TransportFailure: String, CaseIterable {
+        case offline
+        case timeout
+        case cancelled
+
+        var code: URLError.Code {
+            switch self {
+            case .offline: .notConnectedToInternet
+            case .timeout: .timedOut
+            case .cancelled: .cancelled
+            }
+        }
+
+        var protocolClass: URLProtocol.Type {
+            switch self {
+            case .offline: OfflineURLProtocol.self
+            case .timeout: TimeoutURLProtocol.self
+            case .cancelled: CancelledURLProtocol.self
+            }
         }
     }
 }

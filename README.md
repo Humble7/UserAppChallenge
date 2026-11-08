@@ -1,5 +1,21 @@
 # User List App
 
+![UserApp architecture](docs/architecture/userapp-architecture.svg)
+
+## App Screenshots
+
+Six UI states captured with mock data. Click any screenshot to view it at full resolution.
+
+| Users loaded | Refresh in progress | Refresh failed |
+| :---: | :---: | :---: |
+| [<img src="docs/screenshots/Usersloaded.png" alt="Six users displayed with names, emails, and companies" width="240">](docs/screenshots/Usersloaded.png) | [<img src="docs/screenshots/Refreshloading.png" alt="Existing users remain visible while the toolbar shows a refresh spinner" width="240">](docs/screenshots/Refreshloading.png) | [<img src="docs/screenshots/Refreshfailure.png" alt="Existing users remain visible with a refresh failure message at the bottom" width="240">](docs/screenshots/Refreshfailure.png) |
+| Six users loaded. | Users stay visible. | Users kept; retry available. |
+
+| Initial loading (3-second delay) | Empty users | Initial load failed |
+| :---: | :---: | :---: |
+| [<img src="docs/screenshots/Slow-loading-3s.png" alt="Initial loading spinner and Loading message" width="240">](docs/screenshots/Slow-loading-3s.png) | [<img src="docs/screenshots/Emptyusers.png" alt="No users empty state with a Refresh button" width="240">](docs/screenshots/Emptyusers.png) | [<img src="docs/screenshots/Initialloadfailure.png" alt="Initial load error with a Try again button" width="240">](docs/screenshots/Initialloadfailure.png) |
+| Waiting for the first response. | Refresh to check again. | Retry after an error. |
+
 ## Bugs Fixed
 - **Missing list identity:** `User` did not conform to `Identifiable`, causing `List(users)` to fail to compile.
 - **Incorrect response decoding:** The API client expected a JSON object containing a `users` array, but the endpoint returns a top-level array, causing valid responses to fail decoding.
@@ -11,8 +27,10 @@
 Validation approach: 
 reproduce behavioral bugs with focused failing tests, apply minimal fixes, then rerun tests.
 
-Design decisions & Trade-offs
-- Kept MVVM lightweight by injecting `UsersAPIClient` through a small `UsersService` protocol. A repository would become useful for coordinating data sources or caching policies, while use cases would help isolate complex or shared business workflows.
+## Design Decisions & Trade-offs
+
+- Kept MVVM lightweight by injecting `UsersAPIClient` through a small `UsersService` protocol. 
+- Keep navigation ownership at the window or flow level.
 - Modelled refresh separately from initial loading so existing users remain visible during refresh and after refresh failure, accepting that the displayed data may be stale.
-- Ignored overlapping loads to prevent request races with minimal complexity. Features such as search would require a different policy, such as cancellation and protection against stale responses.
-- Prioritised tests around identified bugs and core user flows. A controllable service verifies intermediate and final ViewModel states without timing assumptions, while API client tests separately cover decoding and HTTP validation. UI presentation and live API integration remain outside this unit-test scope.
+- Ignored new load requests while one is in progress, rather than cancelling the active task.
+- Kept loadRequestID and refreshErrorToastID local to the View to manage task triggering and toast presentation, including dismissal timing, while the ViewModel owns loading logic, data, and request state, including refresh errors.
