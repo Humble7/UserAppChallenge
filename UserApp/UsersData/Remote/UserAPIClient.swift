@@ -29,6 +29,7 @@ nonisolated struct UsersAPIClient: UsersService {
         }
 
         // Bug fix: The endpoint returns a top-level array, not an object containing a users array.
-        return try JSONDecoder().decode([User].self, from: data)
+        let users = try JSONDecoder().decode([UserDTO].self, from: data)
+        return users.map { $0.toDomain() }
     }
 }

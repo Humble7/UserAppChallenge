@@ -43,7 +43,7 @@ final class UsersViewModelLoadingTests: XCTestCase {
         XCTAssertEqual(users.map(\.id), [user.id])
         XCTAssertEqual(users.map(\.name), [user.name])
         XCTAssertEqual(users.map(\.email), [user.email])
-        XCTAssertEqual(users.map { $0.company.name }, [user.company.name])
+        XCTAssertEqual(users.map { $0.companyName }, [user.companyName])
     }
 
     // Covers initial load failure: preserve the service error and leave the loading state.
