@@ -76,6 +76,36 @@ final class HTTP200UsersURLProtocol: StubbedUsersURLProtocol {
     }
 }
 
+final class MinimalUsersURLProtocol: StubbedUsersURLProtocol {
+    override class var responseData: Data {
+        Data(#"[{"id":42,"name":"Test User","email":"test@example.com","company":{"name":"Example"}}]"#.utf8)
+    }
+}
+
+final class UnusedFieldsUsersURLProtocol: StubbedUsersURLProtocol {
+    override class var responseData: Data {
+        // Unconsumed fields may be null or change shape without breaking the user list.
+        Data(#"""
+        [{
+            "id": 42,
+            "name": "Test User",
+            "email": "test@example.com",
+            "username": null,
+            "phone": 123,
+            "website": null,
+            "address": "unavailable",
+            "company": {"name": "Example", "catchPhrase": null, "bs": 123}
+        }]
+        """#.utf8)
+    }
+}
+
+final class MissingCompanyNameURLProtocol: StubbedUsersURLProtocol {
+    override class var responseData: Data {
+        Data(#"[{"id":42,"name":"Test User","email":"test@example.com","company":{}}]"#.utf8)
+    }
+}
+
 final class HTTP500URLProtocol: StubbedUsersURLProtocol {
     override class var statusCode: Int { 500 }
 

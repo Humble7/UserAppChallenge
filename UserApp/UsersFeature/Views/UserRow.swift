@@ -12,10 +12,10 @@ struct UserRow: View {
                 .font(AppTypography.rowSubtitle)
                 .foregroundStyle(AppColors.textPrimary)
                 .accessibilityLabel("Email: \(user.email)")
-            Text(user.company.name)
+            Text(user.companyName)
                 .font(AppTypography.rowMetadata)
                 .foregroundStyle(AppColors.textSecondary)
-                .accessibilityLabel("Company: \(user.company.name)")
+                .accessibilityLabel("Company: \(user.companyName)")
         }
         .lineLimit(nil)
         .fixedSize(horizontal: false, vertical: true)
@@ -29,16 +29,19 @@ private struct UserRowPreview: View {
         List {
             UserRow(user: .example)
             UserRow(user: previewUser(
+                id: 2,
                 name: "Alexandra Catherine Montgomery-Wellington",
                 email: "alexandra.montgomery-wellington@international.example.com",
                 companyName: "International Research and Development Company"
             ))
             UserRow(user: previewUser(
+                id: 3,
                 name: "Jordan Reed",
                 email: "jordan.reed@example.com",
                 companyName: "Regional Public Transport and Digital Services Company"
             ))
             UserRow(user: previewUser(
+                id: 4,
                 name: "Taylor Morgan",
                 email: "taylor.morgan@research.example.com",
                 companyName: "Galaxy Technologies"
@@ -46,17 +49,12 @@ private struct UserRowPreview: View {
         }
     }
 
-    private func previewUser(name: String, email: String, companyName: String) -> User {
-        let example = User.example
-        return User(
-            id: example.id,
+    private func previewUser(id: Int, name: String, email: String, companyName: String) -> User {
+        User(
+            id: id,
             name: name,
-            username: example.username,
             email: email,
-            phone: example.phone,
-            website: example.website,
-            address: example.address,
-            company: Company(name: companyName, catchPhrase: "", bs: "")
+            companyName: companyName
         )
     }
 }

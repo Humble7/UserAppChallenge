@@ -3,7 +3,7 @@
 ## Bugs Fixed
 
 - **Missing list identity:** `User` did not conform to `Identifiable`, causing `List(users)` to fail to compile. **Fix:** Added `Identifiable` conformance, using the existing `id` property as the list identity.
-- **Incorrect response decoding:** The API client expected a JSON object containing a `users` array, but the endpoint returns a top-level array, causing valid responses to fail decoding. **Fix:** Decode the response directly as `[User]` with `JSONDecoder`.
+- **Incorrect response decoding:** The API client expected a JSON object containing a `users` array, but the endpoint returns a top-level array, causing valid responses to fail decoding. **Fix:** Decode the response as `[UserDTO]` with `JSONDecoder`, then map to domain users.
 - **Overlapping requests:** Repeated refreshes could start concurrent requests, allowing older responses to overwrite newer results or end the loading state prematurely. **Fix:** Guard `load()` with `isLoading` so new load requests are ignored while an initial load or refresh is in progress.
 - **Incorrect ViewModel ownership:** The view created its own ViewModel using `@ObservedObject`, allowing view reconstruction to recreate the ViewModel and lose loaded data and state. **Fix:** Use `@StateObject` to retain the ViewModel across view reconstruction for the same view identity.
 - **Missing HTTP validation:** The API client decoded response bodies without checking HTTP status codes, potentially treating server errors as decoding failures or successful results. **Fix:** Validate that the response is an `HTTPURLResponse` with a status code in `200..<300` before decoding; otherwise throw `UsersAPIError.invalidResponse` or `UsersAPIError.httpStatus`.
@@ -15,6 +15,8 @@ reproduce behavioral bugs with focused failing tests, apply minimal fixes, then 
 ## Design Decisions & Trade-offs
 
 - Kept MVVM lightweight by injecting `UsersAPIClient` through a small `UsersService` protocol. 
+- Kept the domain `User` independent of JSON decoding, with only identity, name, email, and company name. The data layer decodes `UserDTO` and maps it to `User`.
+- Modelled only the API fields consumed by the current user list in `UserDTO`, preserving the JSON structure for those fields, including nested `company.name`. `Decodable` ignores undeclared fields.
 - Keep navigation ownership at the window or flow level.
 - Modelled refresh separately from initial loading so existing users remain visible during refresh and after refresh failure, accepting that the displayed data may be stale.
 - Ignored new load requests while one is in progress, rather than cancelling the active task.

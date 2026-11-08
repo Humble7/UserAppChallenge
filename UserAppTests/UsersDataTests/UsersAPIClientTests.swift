@@ -30,7 +30,21 @@ struct UsersAPIClientTests {
         #expect(users.map(\.id) == [42])
         #expect(users.map(\.name) == ["Test User"])
         #expect(users.map(\.email) == ["test@example.com"])
-        #expect(users.map { $0.company.name } == ["Example"])
+        #expect(users.map { $0.companyName } == ["Example"])
+    }
+
+    @Test(arguments: [MinimalUsersURLProtocol.self, UnusedFieldsUsersURLProtocol.self])
+    @MainActor
+    func `Fetch users depends only on consumed API fields`(_ protocolClass: StubbedUsersURLProtocol.Type) async throws {
+        let (client, session) = makeClient(protocolClass: protocolClass)
+        defer { session.invalidateAndCancel() }
+
+        let users = try await client.fetchUsers()
+
+        #expect(users.map(\.id) == [42])
+        #expect(users.map(\.name) == ["Test User"])
+        #expect(users.map(\.email) == ["test@example.com"])
+        #expect(users.map(\.companyName) == ["Example"])
     }
 
     // Bug fix
@@ -74,10 +88,10 @@ struct UsersAPIClientTests {
         }
     }
 
-    @Test
+    @Test(arguments: [MissingFieldURLProtocol.self, MissingCompanyNameURLProtocol.self])
     @MainActor
-    func `Fetch users rejects missing required fields`() async {
-        let (client, session) = makeClient(protocolClass: MissingFieldURLProtocol.self)
+    func `Fetch users rejects missing required fields`(_ protocolClass: StubbedUsersURLProtocol.Type) async {
+        let (client, session) = makeClient(protocolClass: protocolClass)
         defer { session.invalidateAndCancel() }
 
         do {

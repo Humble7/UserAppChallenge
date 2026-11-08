@@ -52,22 +52,7 @@ final class UsersViewModelRefreshTests: XCTestCase {
         // Arrange
         let service = ControlledUsersService()
         let viewModel = UsersViewModel(service: service)
-        let user = User(
-            id: 1,
-            name: "Existing User",
-            username: "user",
-            email: "user@example.com",
-            phone: "123",
-            website: "example.com",
-            address: Address(
-                street: "Main Street",
-                suite: "1",
-                city: "Sydney",
-                zipcode: "2000",
-                geo: Geo(lat: "-33", lng: "151")
-            ),
-            company: Company(name: "Example", catchPhrase: "", bs: "")
-        )
+        let user = makeUser(id: 1, name: "Existing User", email: "user@example.com")
         let initialLoad = Task { await viewModel.load() }
         try await service.waitUntilRequestStarted()
         service.complete(with: [user])
