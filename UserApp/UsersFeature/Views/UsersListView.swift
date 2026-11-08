@@ -108,20 +108,20 @@ struct UsersListView: View {
 #if DEBUG
 #Preview("Users loaded") {
     NavigationStack {
-        UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success)))
+        UsersListView(viewModel: UsersViewModel(service: MockUsersService(scenario: .success)))
     }
 }
 
 #Preview("Empty users") {
     NavigationStack {
-        UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(result: [])))
+        UsersListView(viewModel: UsersViewModel(service: MockUsersService(result: [])))
     }
 }
 
 #Preview("Slow loading (3s)") {
     NavigationStack {
         UsersListView(
-            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .success, delay: .seconds(3)))
+            viewModel: UsersViewModel(service: MockUsersService(scenario: .success, delay: .seconds(3)))
         )
     }
 }
@@ -129,21 +129,21 @@ struct UsersListView: View {
 #Preview("Initial load failure") {
     NavigationStack {
         UsersListView(
-            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialFailure))
+            viewModel: UsersViewModel(service: MockUsersService(scenario: .initialFailure))
         )
     }
 }
 
 #Preview("Initial loading") {
     NavigationStack {
-        UsersListView(viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .initialLoading)))
+        UsersListView(viewModel: UsersViewModel(service: MockUsersService(scenario: .initialLoading)))
     }
 }
 
 #Preview("Refresh failure") {
     NavigationStack {
         UsersListView(
-            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshFailure))
+            viewModel: UsersViewModel(service: MockUsersService(scenario: .refreshFailure))
         )
     }
 }
@@ -151,7 +151,7 @@ struct UsersListView: View {
 #Preview("Refresh loading") {
     NavigationStack {
         UsersListView(
-            viewModel: UsersViewModel(apiClient: MockUsersService(scenario: .refreshLoading))
+            viewModel: UsersViewModel(service: MockUsersService(scenario: .refreshLoading))
         )
     }
 }

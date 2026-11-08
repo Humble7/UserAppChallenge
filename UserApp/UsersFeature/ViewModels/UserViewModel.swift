@@ -19,10 +19,10 @@ enum RefreshState {
 final class UsersViewModel: ObservableObject {
     @Published private(set) var state: UsersState = .idle
 
-    private let apiClient: any UsersService
+    private let service: any UsersService
 
-    init(apiClient: any UsersService) {
-        self.apiClient = apiClient
+    init(service: any UsersService) {
+        self.service = service
     }
     
     var isLoading: Bool {
@@ -50,7 +50,7 @@ final class UsersViewModel: ObservableObject {
         }
 
         do {
-            let users = try await apiClient.fetchUsers()
+            let users = try await service.fetchUsers()
             // Bug fix: A service may return after cancellation; do not publish its result.
             try Task.checkCancellation()
             state = .loaded(users: users, refresh: .idle)
