@@ -10,7 +10,7 @@ struct UserApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                UsersListView(viewModel: UsersViewModel(apiClient: UsersAPIClient()))
+                UsersListView(viewModel: UsersViewModel(service: UsersAPIClient()))
             }
         }
     }

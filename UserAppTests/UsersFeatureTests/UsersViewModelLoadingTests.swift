@@ -8,7 +8,7 @@ final class UsersViewModelLoadingTests: XCTestCase {
     func testInitialLoadSucceeds() async throws {
         // Arrange
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let user = makeUser(id: 42, name: "Loaded User", email: "loaded@example.com")
 
         if case .idle = viewModel.state {
@@ -51,7 +51,7 @@ final class UsersViewModelLoadingTests: XCTestCase {
     func testInitialLoadFails() async throws {
         // Arrange
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
 
         // Act
         let load = Task { await viewModel.load() }
@@ -82,7 +82,7 @@ final class UsersViewModelLoadingTests: XCTestCase {
     func testRetryAfterInitialFailureSucceeds() async throws {
         // Arrange
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let user = makeUser(id: 42, name: "Recovered User", email: "recovered@example.com")
         let initialLoad = Task { await viewModel.load() }
         try await service.waitUntilRequestStarted()
@@ -129,7 +129,7 @@ final class UsersViewModelLoadingTests: XCTestCase {
     func testIgnoresDuplicateLoad() async throws {
         // Arrange
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
 
         // Act
         let firstLoad = Task {
@@ -157,7 +157,7 @@ final class UsersViewModelLoadingTests: XCTestCase {
     @MainActor
     func testInitialLoadAcceptsEmptyResult() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
 
         try await loadUsers([], into: viewModel, using: service)
 
@@ -172,7 +172,7 @@ final class UsersViewModelLoadingTests: XCTestCase {
     @MainActor
     func testInitialLoadPreservesMultipleUsersAndOrder() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let users = [
             makeUser(id: 42, name: "First User", email: "first@example.com"),
             makeUser(id: 7, name: "Second User", email: "second@example.com")

@@ -10,7 +10,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     func testCancelledLoadReturnsToIdle() async throws {
         // Arrange
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
 
         // Act
         let load = Task {
@@ -34,7 +34,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     @MainActor
     func testCancelledRefreshKeepsUsersAndAllowsRetry() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let existing = makeUser(id: 1, name: "Existing User", email: "existing@example.com")
         let updated = makeUser(id: 1, name: "Updated User", email: "updated@example.com")
         try await loadUsers([existing], into: viewModel, using: service)
@@ -65,7 +65,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     @MainActor
     func testCancelledInitialLoadIgnoresLateSuccess() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let lateUser = makeUser(id: 42, name: "Late User", email: "late@example.com")
 
         let initialLoad = Task { await viewModel.load() }
@@ -84,7 +84,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     @MainActor
     func testCancelledRefreshIgnoresLateSuccess() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let existing = makeUser(id: 1, name: "Existing User", email: "existing@example.com")
         let lateUser = makeUser(id: 1, name: "Late Update", email: "late@example.com")
         try await loadUsers([existing], into: viewModel, using: service)
@@ -109,7 +109,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     @MainActor
     func testAlreadyCancelledLoadDoesNotStartRequest() async {
         let service = ImmediateUsersService(result: [])
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
 
         let initialLoad = Task { await viewModel.load() }
         initialLoad.cancel()
@@ -126,7 +126,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     func testAlreadyCancelledRefreshDoesNotStartRequest() async {
         let user = makeUser(id: 1, name: "Existing User", email: "existing@example.com")
         let service = ImmediateUsersService(result: [user])
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         await viewModel.load()
 
         let refresh = Task { await viewModel.load() }
@@ -144,7 +144,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     @MainActor
     func testServiceCancellationDoesNotBecomeFailure() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
 
         let initialLoad = Task { await viewModel.load() }
         try await service.waitUntilRequestStarted()
@@ -162,7 +162,7 @@ final class UsersViewModelCancellationTests: XCTestCase {
     @MainActor
     func testCancellationErrorDoesNotBecomeFailure() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
 
         let initialLoad = Task { await viewModel.load() }
         try await service.waitUntilRequestStarted()

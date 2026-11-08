@@ -8,7 +8,7 @@ final class UsersViewModelRefreshTests: XCTestCase {
     func testRefreshSucceeds() async throws {
         // Arrange: use the same ID so the test detects stale content, not just changes in identity.
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let existingUser = makeUser(id: 1, name: "Existing User", email: "existing@example.com")
         let updatedUser = makeUser(id: 1, name: "Updated User", email: "updated@example.com")
         let initialLoad = Task { await viewModel.load() }
@@ -51,7 +51,7 @@ final class UsersViewModelRefreshTests: XCTestCase {
     func testRefreshFailureKeepsLoadedUsers() async throws {
         // Arrange
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let user = User(
             id: 1,
             name: "Existing User",
@@ -99,7 +99,7 @@ final class UsersViewModelRefreshTests: XCTestCase {
     @MainActor
     func testRefreshAfterFailureSucceeds() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let existing = makeUser(id: 1, name: "Existing User", email: "existing@example.com")
         let updated = makeUser(id: 1, name: "Recovered User", email: "recovered@example.com")
         try await loadUsers([existing], into: viewModel, using: service)
@@ -137,7 +137,7 @@ final class UsersViewModelRefreshTests: XCTestCase {
     @MainActor
     func testIgnoresDuplicateRefresh() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let user = makeUser(id: 1, name: "Existing User", email: "existing@example.com")
         try await loadUsers([user], into: viewModel, using: service)
 
@@ -166,7 +166,7 @@ final class UsersViewModelRefreshTests: XCTestCase {
     @MainActor
     func testRefreshAcceptsEmptyResult() async throws {
         let service = ControlledUsersService()
-        let viewModel = UsersViewModel(apiClient: service)
+        let viewModel = UsersViewModel(service: service)
         let user = makeUser(id: 1, name: "Existing User", email: "existing@example.com")
         try await loadUsers([user], into: viewModel, using: service)
 
