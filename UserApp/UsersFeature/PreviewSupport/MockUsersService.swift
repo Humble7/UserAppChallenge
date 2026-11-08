@@ -18,7 +18,7 @@ actor MockUsersService: UsersService {
 
     init(
         scenario: Scenario = .success,
-        result: [User] = [User.example],
+        result: [User] = User.examples,
         error: UsersAPIError = .httpStatus(500),
         delay: Duration = .zero
     ) {
